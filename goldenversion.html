@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JKS Base64 编解码</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 60%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .box {
+            background: #fff;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input, button, textarea {
+            width: 90%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+
+        .small-text {
+            font-size: 14px;
+            color: gray;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>JKS 文件 Base64 编解码</h2>
+
+        <div class="box">
+            <h3>JKS ➝ Base64 编码</h3>
+            <input type="file" id="fileInput" accept=".jks">
+            <button onclick="convertToBase64()">转换为 Base64</button>
+            <button onclick="downloadBase64()">下载 Base64</button>
+            <textarea id="base64Output" readonly placeholder="Base64 编码结果"></textarea>
+        </div>
+
+        <div class="box">
+            <h3>Base64 ➝ JKS 解码</h3>
+            <textarea id="base64Input" placeholder="粘贴 Base64 编码内容"></textarea>
+            <button onclick="convertToJKS()">下载 JKS 文件</button>
+            <p class="small-text">⚠️ 确保粘贴的是 **完整** 的 Base64 编码内容</p>
+        </div>
+    </div>
+
+    <script>
+        function convertToBase64() {
+            let fileInput = document.getElementById("fileInput").files[0];
+            if (!fileInput) {
+                alert("请选择一个 .jks 文件！");
+                return;
+            }
+
+            let reader = new FileReader();
+            reader.readAsDataURL(fileInput);
+            reader.onload = function () {
+                let base64String = reader.result.split(",")[1]; // 移除 `data:application/octet-stream;base64,`
+                document.getElementById("base64Output").value = base64String;
+            };
+            reader.onerror = function (error) {
+                alert("文件读取失败: " + error);
+            };
+        }
+
+        function downloadBase64() {
+            let base64Text = document.getElementById("base64Output").value;
+            if (!base64Text) {
+                alert("没有可下载的 Base64 编码！");
+                return;
+            }
+
+            let blob = new Blob([base64Text], { type: "text/plain" });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "jks_base64.txt";
+            link.click();
+        }
+
+        function convertToJKS() {
+            let base64Text = document.getElementById("base64Input").value.trim();
+            if (!base64Text) {
+                alert("请输入 Base64 编码！");
+                return;
+            }
+
+            try {
+                let byteCharacters = atob(base64Text); // Base64 解码
+                let byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                let byteArray = new Uint8Array(byteNumbers);
+                let blob = new Blob([byteArray], { type: "application/octet-stream" });
+
+                let link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "decoded.jks";
+                link.click();
+            } catch (error) {
+                alert("Base64 解析失败，请检查输入是否正确！");
+            }
+        }
+    </script>
+</body>
+</html>
